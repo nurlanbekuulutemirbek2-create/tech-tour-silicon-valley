@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ success: boolean; user?: any; error?: string }>
   signUp: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; user?: any; error?: string }>
   signInWithGoogle: () => Promise<{ success: boolean; user?: any; error?: string }>
+  signInWithApple: () => Promise<{ success: boolean; user?: any; error?: string }>
   logout: () => Promise<{ success: boolean; error?: string }>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   isAuthenticated: boolean

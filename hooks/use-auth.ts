@@ -8,6 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
   updateProfile,
@@ -127,6 +128,24 @@ export function useAuth() {
     }
   }
 
+  const signInWithApple = async () => {
+    if (!auth || !firebaseAvailable) {
+      return { 
+        success: false, 
+        error: 'Firebase is not configured. Please check your environment variables.' 
+      }
+    }
+
+    try {
+      const provider = new OAuthProvider('apple.com')
+      const result = await signInWithPopup(auth, provider)
+      return { success: true, user: result.user }
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
+    }
+  }
+
   const logout = async () => {
     if (!auth || !firebaseAvailable) {
       return { 
@@ -168,6 +187,7 @@ export function useAuth() {
     signIn,
     signUp,
     signInWithGoogle,
+    signInWithApple,
     logout,
     resetPassword,
     isAuthenticated: !!user

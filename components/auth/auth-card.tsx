@@ -17,6 +17,7 @@ interface AuthCardProps {
   onSignIn: (e: React.FormEvent) => void
   onSignUp: (e: React.FormEvent) => void
   onGoogleSignIn: () => void
+  onAppleSignIn: () => void
   onForgotPassword: () => void
 }
 
@@ -31,6 +32,7 @@ export function AuthCard({
   onSignIn,
   onSignUp,
   onGoogleSignIn,
+  onAppleSignIn,
   onForgotPassword,
 }: AuthCardProps) {
   const [activeTab, setActiveTab] = useState("signup")
@@ -257,6 +259,7 @@ export function AuthCard({
             </div>
           </button>
           <button
+            onClick={onAppleSignIn}
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 flex items-center justify-center hover:bg-black/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
             disabled={isLoading}
           >

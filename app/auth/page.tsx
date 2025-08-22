@@ -15,7 +15,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const { toast } = useToast()
-  const { signIn, signUp, signInWithGoogle, firebaseAvailable, loading: authLoading } = useAuthContext()
+  const { signIn, signUp, signInWithGoogle, signInWithApple, firebaseAvailable, loading: authLoading } = useAuthContext()
   const router = useRouter()
 
   const validateEmail = (email: string) => {
@@ -179,6 +179,45 @@ export default function AuthPage() {
     }
   }
 
+  const handleAppleSignIn = async () => {
+    if (!firebaseAvailable) {
+      toast({
+        title: "Firebase not configured",
+        description: "Please check your environment variables and restart the server.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const result = await signInWithApple()
+      
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: "You have been signed in with Apple successfully.",
+        })
+        router.push("/") // Redirect to home page
+      } else {
+        toast({
+          title: "Apple sign in failed",
+          description: result.error || "Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleForgotPassword = () => {
     toast({
       title: "Reset link sent",
@@ -270,6 +309,7 @@ export default function AuthPage() {
           onSignIn={handleSignIn}
           onSignUp={handleSignUp}
           onGoogleSignIn={handleGoogleSignIn}
+          onAppleSignIn={handleAppleSignIn}
           onForgotPassword={handleForgotPassword}
         />
         <Toaster />
