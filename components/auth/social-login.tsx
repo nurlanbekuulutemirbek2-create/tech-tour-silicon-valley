@@ -7,9 +7,10 @@ import { Github, Mail } from "lucide-react"
 interface SocialLoginProps {
   onSocialLogin: (provider: string) => void
   type: "signin" | "signup"
+  isLoading?: boolean
 }
 
-export function SocialLogin({ onSocialLogin, type }: SocialLoginProps) {
+export function SocialLogin({ onSocialLogin, type, isLoading = false }: SocialLoginProps) {
   return (
     <div className="space-y-6">
       <div className="relative">
@@ -27,6 +28,7 @@ export function SocialLogin({ onSocialLogin, type }: SocialLoginProps) {
           variant="outline"
           className="bg-[#2c2c2e] border border-[#3a3a3c] text-white hover:bg-[#3a3a3c] hover:text-white hover:border-[#48484a] transition-all duration-200 rounded-2xl h-14 font-medium font-sans"
           onClick={() => onSocialLogin("Google")}
+          disabled={isLoading}
         >
           <Mail className="w-5 h-5 mr-2" />
           Google
@@ -36,6 +38,7 @@ export function SocialLogin({ onSocialLogin, type }: SocialLoginProps) {
           variant="outline"
           className="bg-[#2c2c2e] border border-[#3a3a3c] text-white hover:bg-[#3a3a3c] hover:text-white hover:border-[#48484a] transition-all duration-200 rounded-2xl h-14 font-medium font-sans"
           onClick={() => onSocialLogin("GitHub")}
+          disabled={isLoading}
         >
           <Github className="w-5 h-5 mr-2" />
           GitHub

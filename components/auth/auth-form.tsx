@@ -142,7 +142,7 @@ export function AuthForm({
           </Button>
         </form>
 
-        <SocialLogin onSocialLogin={onSocialLogin} isLoading={isLoading} />
+        <SocialLogin onSocialLogin={onSocialLogin} type="signin" isLoading={isLoading} />
       </TabsContent>
 
       <TabsContent value="signup" className="space-y-4 mt-6">
@@ -246,7 +246,7 @@ export function AuthForm({
           </Button>
         </form>
 
-        <SocialLogin onSocialLogin={onSocialLogin} isLoading={isLoading} />
+        <SocialLogin onSocialLogin={onSocialLogin} type="signup" isLoading={isLoading} />
       </TabsContent>
     </Tabs>
   )
