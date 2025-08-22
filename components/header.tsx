@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button"
 import { useAuthContext } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 export function Header() {
-  const { user, isAuthenticated, logout } = useAuthContext()
+  const { user, isAuthenticated, logout, loading } = useAuthContext()
   const router = useRouter()
   const { toast } = useToast()
 
@@ -17,7 +18,7 @@ export function Header() {
         title: "Logged out",
         description: "You have been logged out successfully.",
       })
-      router.push("/")
+      router.push("/auth")
     } else {
       toast({
         title: "Error",
@@ -53,7 +54,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          {isAuthenticated ? (
+          {loading ? (
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          ) : isAuthenticated ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">
                 Welcome, {user?.displayName || user?.email}
@@ -64,7 +67,7 @@ export function Header() {
             </div>
           ) : (
             <Button asChild>
-              <a href="/auth">Sign In</a>
+              <Link href="/auth">Sign In</Link>
             </Button>
           )}
         </div>

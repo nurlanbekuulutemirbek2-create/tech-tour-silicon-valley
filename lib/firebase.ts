@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore'
+import { getAnalytics, Analytics } from 'firebase/analytics'
 
 // Check if environment variables are set
 const requiredEnvVars = {
@@ -10,11 +11,12 @@ const requiredEnvVars = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
 // Check if any required environment variables are missing
 const missingVars = Object.entries(requiredEnvVars)
-  .filter(([key, value]) => !value)
+  .filter(([key, value]) => !value && key !== 'measurementId') // measurementId is optional
   .map(([key]) => key)
 
 if (missingVars.length > 0) {
@@ -25,18 +27,20 @@ if (missingVars.length > 0) {
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: requiredEnvVars.apiKey || 'demo-api-key',
-  authDomain: requiredEnvVars.authDomain || 'demo-project.firebaseapp.com',
-  projectId: requiredEnvVars.projectId || 'demo-project',
-  storageBucket: requiredEnvVars.storageBucket || 'demo-project.appspot.com',
-  messagingSenderId: requiredEnvVars.messagingSenderId || '123456789',
-  appId: requiredEnvVars.appId || 'demo-app-id',
+  apiKey: requiredEnvVars.apiKey || 'AIzaSyBsEYZX_bChp09DimURsak2dsmPR1_6opM',
+  authDomain: requiredEnvVars.authDomain || 'verifyme-1c6b2.firebaseapp.com',
+  projectId: requiredEnvVars.projectId || 'verifyme-1c6b2',
+  storageBucket: requiredEnvVars.storageBucket || 'verifyme-1c6b2.firebasestorage.app',
+  messagingSenderId: requiredEnvVars.messagingSenderId || '674821868466',
+  appId: requiredEnvVars.appId || '1:674821868466:web:33757c0d84db1bdf3732ab',
+  measurementId: requiredEnvVars.measurementId || 'G-7RQ1TQF9XS',
 }
 
 // Initialize Firebase only if we have valid configuration
 let app
 let auth: Auth | null = null
 let db: Firestore | null = null
+let analytics: Analytics | null = null
 
 try {
   app = initializeApp(firebaseConfig)
@@ -46,6 +50,15 @@ try {
   
   // Initialize Cloud Firestore and get a reference to the service
   db = getFirestore(app)
+  
+  // Initialize Analytics (only in browser environment)
+  if (typeof window !== 'undefined') {
+    try {
+      analytics = getAnalytics(app)
+    } catch (error) {
+      console.log('Analytics not available:', error)
+    }
+  }
   
   // Connect to emulators in development
   if (process.env.NODE_ENV === 'development') {
@@ -64,8 +77,9 @@ try {
     console.warn('Using mock Firebase objects for development')
     auth = null
     db = null
+    analytics = null
   }
 }
 
-export { auth, db }
+export { auth, db, analytics }
 export default app
