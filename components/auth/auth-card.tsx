@@ -17,6 +17,7 @@ interface AuthCardProps {
   onSignIn: (e: React.FormEvent) => void
   onSignUp: (e: React.FormEvent) => void
   onGoogleSignIn: () => void
+  onForgotPassword: () => void
 }
 
 export function AuthCard({
@@ -30,6 +31,7 @@ export function AuthCard({
   onSignIn,
   onSignUp,
   onGoogleSignIn,
+  onForgotPassword,
 }: AuthCardProps) {
   const [activeTab, setActiveTab] = useState("signup")
   const [firstName, setFirstName] = useState("")
@@ -216,6 +218,7 @@ export function AuthCard({
                 </label>
                 <button
                   type="button"
+                  onClick={onForgotPassword}
                   className="text-white/60 hover:text-white text-sm transition-colors duration-200"
                 >
                   Forgot password?
