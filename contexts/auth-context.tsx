@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 interface AuthContextType {
   user: any
   loading: boolean
+  firebaseAvailable: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; user?: any; error?: string }>
   signUp: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; user?: any; error?: string }>
   signInWithGoogle: () => Promise<{ success: boolean; user?: any; error?: string }>
