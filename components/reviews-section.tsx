@@ -8,7 +8,7 @@ const reviews = [
   {
     id: 1,
     name: "Sarah Chen",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder-user.jpg",
     role: "Software Engineer",
     company: "Stripe",
     rating: 5,
@@ -16,12 +16,12 @@ const reviews = [
     date: "February 2025",
     review:
       "Absolutely incredible experience! Getting to see the inside of Apple Park and meet engineers at Google was a dream come true. The tour guide was knowledgeable and the small group size made it feel personal.",
-    images: ["/placeholder.svg?height=200&width=300", "/placeholder.svg?height=200&width=300"],
+    images: ["/images/apple-park.jpg", "/images/google-campus.jpg"],
   },
   {
     id: 2,
     name: "Marcus Rodriguez",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder-user.jpg",
     role: "Product Manager",
     company: "Microsoft",
     rating: 5,
@@ -29,12 +29,12 @@ const reviews = [
     date: "January 2025",
     review:
       "The Tesla factory tour was mind-blowing! Seeing the robots in action and learning about sustainable manufacturing was fascinating. Netflix's content creation process was equally impressive.",
-    images: ["/placeholder.svg?height=200&width=300"],
+    images: ["/images/tesla-factory.jpg"],
   },
   {
     id: 3,
     name: "Emily Watson",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder-user.jpg",
     role: "CS Student",
     company: "Stanford University",
     rating: 5,

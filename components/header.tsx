@@ -6,6 +6,33 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
+// Helper function to extract first name from display name or email
+const getFirstName = (user: any): string => {
+  if (!user) return ""
+  
+  // If display name exists, extract first name
+  if (user.displayName) {
+    const firstName = user.displayName.split(' ')[0]
+    return firstName || user.displayName
+  }
+  
+  // If no display name, extract first part of email (before @)
+  if (user.email) {
+    const emailName = user.email.split('@')[0]
+    // Remove numbers and special characters, then capitalize first letter
+    const cleanName = emailName.replace(/[0-9]/g, '').replace(/[^a-zA-Z]/g, '')
+    if (cleanName) {
+      return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase()
+    }
+    // If no clean name, try to extract a reasonable first name
+    const nameParts = emailName.split(/[0-9_]/)
+    const firstName = nameParts[0] || emailName
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+  }
+  
+  return "User"
+}
+
 export function Header() {
   const { user, isAuthenticated, logout, loading } = useAuthContext()
   const router = useRouter()
@@ -59,7 +86,7 @@ export function Header() {
           ) : isAuthenticated ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user?.displayName || user?.email}
+                Welcome, {getFirstName(user)}
               </span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Sign Out

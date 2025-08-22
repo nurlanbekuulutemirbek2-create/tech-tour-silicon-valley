@@ -84,7 +84,7 @@ export function AboutSection() {
             </div>
             <div className="relative">
               <img
-                src="/placeholder.svg?height=400&width=500"
+                src="/images/google-campus.jpg"
                 alt="Silicon Valley tech campus"
                 className="rounded-xl w-full h-auto"
               />

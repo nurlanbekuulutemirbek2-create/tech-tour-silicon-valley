@@ -6,7 +6,7 @@ import { MapPin, Clock, Users } from "lucide-react"
 const companies = [
   {
     name: "Apple",
-    logo: "/placeholder.svg?height=60&width=60",
+    logo: "/images/apple-park.jpg",
     description: "Visit the iconic Apple Park and learn about revolutionary product design.",
     location: "Cupertino",
     duration: "3 hours",
@@ -16,7 +16,7 @@ const companies = [
   },
   {
     name: "Google",
-    logo: "/placeholder.svg?height=60&width=60",
+    logo: "/images/google-campus.jpg",
     description: "Explore the Googleplex and discover how search changed the world.",
     location: "Mountain View",
     duration: "2.5 hours",
@@ -26,7 +26,7 @@ const companies = [
   },
   {
     name: "Meta",
-    logo: "/placeholder.svg?height=60&width=60",
+    logo: "/images/meta-campus.jpg",
     description: "Step into the metaverse at Meta's headquarters and VR labs.",
     location: "Menlo Park",
     duration: "2 hours",
@@ -36,7 +36,7 @@ const companies = [
   },
   {
     name: "Netflix",
-    logo: "/placeholder.svg?height=60&width=60",
+    logo: "/images/netflix-studios.jpg",
     description: "Go behind the scenes of content creation and streaming technology.",
     location: "Los Gatos",
     duration: "2.5 hours",
@@ -46,7 +46,7 @@ const companies = [
   },
   {
     name: "Tesla",
-    logo: "/placeholder.svg?height=60&width=60",
+    logo: "/images/tesla-factory.jpg",
     description: "Experience the future of transportation and sustainable energy.",
     location: "Palo Alto",
     duration: "3 hours",
@@ -73,15 +73,16 @@ export function FeaturedCompanies() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {companies.map((company) => (
             <Card key={company.name} className="group overflow-hidden hover:shadow-lg transition-all duration-300">
-              <div className={`h-32 bg-gradient-to-br ${company.color} relative`}>
-                <div className="absolute inset-0 bg-black/20" />
+              <div className="h-32 relative overflow-hidden">
+                <img
+                  src={company.logo}
+                  alt={`${company.name} campus`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 <div className="absolute bottom-4 left-4 flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-lg bg-white/90 p-2">
-                    <img
-                      src={company.logo || "/placeholder.svg"}
-                      alt={`${company.name} logo`}
-                      className="h-full w-full object-contain"
-                    />
+                  <div className="h-12 w-12 rounded-lg bg-white/90 p-2 flex items-center justify-center">
+                    <span className="font-bold text-lg text-gray-800">{company.name.charAt(0)}</span>
                   </div>
                   <h3 className="font-serif text-xl font-bold text-white">{company.name}</h3>
                 </div>
