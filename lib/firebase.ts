@@ -27,13 +27,13 @@ if (missingVars.length > 0) {
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: requiredEnvVars.apiKey || 'AIzaSyBsEYZX_bChp09DimURsak2dsmPR1_6opM',
-  authDomain: requiredEnvVars.authDomain || 'verifyme-1c6b2.firebaseapp.com',
-  projectId: requiredEnvVars.projectId || 'verifyme-1c6b2',
-  storageBucket: requiredEnvVars.storageBucket || 'verifyme-1c6b2.firebasestorage.app',
-  messagingSenderId: requiredEnvVars.messagingSenderId || '674821868466',
-  appId: requiredEnvVars.appId || '1:674821868466:web:33757c0d84db1bdf3732ab',
-  measurementId: requiredEnvVars.measurementId || 'G-7RQ1TQF9XS',
+  apiKey: requiredEnvVars.apiKey,
+  authDomain: requiredEnvVars.authDomain,
+  projectId: requiredEnvVars.projectId,
+  storageBucket: requiredEnvVars.storageBucket,
+  messagingSenderId: requiredEnvVars.messagingSenderId,
+  appId: requiredEnvVars.appId,
+  measurementId: requiredEnvVars.measurementId,
 }
 
 // Initialize Firebase only if we have valid configuration
