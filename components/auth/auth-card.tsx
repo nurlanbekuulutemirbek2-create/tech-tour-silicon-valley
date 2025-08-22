@@ -16,8 +16,7 @@ interface AuthCardProps {
   setRememberMe: (remember: boolean) => void
   onSignIn: (e: React.FormEvent) => void
   onSignUp: (e: React.FormEvent) => void
-  onSocialLogin: (provider: string) => void
-  onForgotPassword: () => void
+  onGoogleSignIn: () => void
 }
 
 export function AuthCard({
@@ -30,18 +29,13 @@ export function AuthCard({
   setRememberMe,
   onSignIn,
   onSignUp,
-  onSocialLogin,
-  onForgotPassword,
+  onGoogleSignIn,
 }: AuthCardProps) {
   const [activeTab, setActiveTab] = useState("signup")
-  const [firstName, setFirstName] = useState("John")
+  const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("(775) 351-6501")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-
-  const handleRedirect = () => {
-    window.open("https://www.youtube.com/@diecastbydollarall", "_blank")
-  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -86,13 +80,7 @@ export function AuthCard({
             }`}
           >
             {/* Sign Up Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleRedirect()
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={onSignUp} className="space-y-4">
               {/* Name fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
@@ -124,6 +112,7 @@ export function AuthCard({
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-0 pl-12 text-base transition-all duration-200 hover:bg-black/30 focus:bg-black/30"
                   placeholder="Enter your email"
+                  required
                 />
               </div>
 
@@ -146,6 +135,25 @@ export function AuthCard({
                 />
               </div>
 
+              {/* Password field */}
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-0 pr-12 text-base transition-all duration-200 hover:bg-black/30 focus:bg-black/30"
+                  placeholder="Create a password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors duration-200"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+
               {/* Create account button */}
               <Button
                 type="submit"
@@ -162,13 +170,7 @@ export function AuthCard({
               activeTab === "signin" ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 absolute inset-0"
             }`}
           >
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleRedirect()
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={onSignIn} className="space-y-4">
               {/* Email field */}
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40 transition-colors duration-200" />
@@ -178,6 +180,7 @@ export function AuthCard({
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-0 pl-12 text-base transition-all duration-200 hover:bg-black/30 focus:bg-black/30"
                   placeholder="Enter your email"
+                  required
                 />
               </div>
 
@@ -189,6 +192,7 @@ export function AuthCard({
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-0 pr-12 text-base transition-all duration-200 hover:bg-black/30 focus:bg-black/30"
                   placeholder="Enter your password"
+                  required
                 />
                 <button
                   type="button"
@@ -212,7 +216,6 @@ export function AuthCard({
                 </label>
                 <button
                   type="button"
-                  onClick={onForgotPassword}
                   className="text-white/60 hover:text-white text-sm transition-colors duration-200"
                 >
                   Forgot password?
@@ -242,16 +245,17 @@ export function AuthCard({
 
         <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={handleRedirect}
+            onClick={onGoogleSignIn}
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 flex items-center justify-center hover:bg-black/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+            disabled={isLoading}
           >
             <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
               <div className="w-4 h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 rounded-full"></div>
             </div>
           </button>
           <button
-            onClick={handleRedirect}
             className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-2xl h-14 flex items-center justify-center hover:bg-black/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+            disabled={isLoading}
           >
             <div className="w-6 h-6 text-white">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -270,12 +274,9 @@ export function AuthCard({
         <div className="text-center mt-6 pt-4 border-t border-white/10">
           <p className="text-white/30 text-xs">
             designed and developed with ❤️ by{" "}
-            <button
-              onClick={handleRedirect}
-              className="text-white/50 hover:text-white/70 underline transition-colors duration-200"
-            >
+            <span className="text-white/50">
               Temir
-            </button>
+            </span>
           </p>
         </div>
       </div>
