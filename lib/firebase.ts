@@ -60,11 +60,12 @@ try {
     }
   }
   
-  // Connect to emulators in development
-  if (process.env.NODE_ENV === 'development') {
+  // Only connect to emulators if explicitly enabled via environment variable
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
     try {
       connectAuthEmulator(auth, 'http://localhost:9099')
       connectFirestoreEmulator(db, 'localhost', 8080)
+      console.log('Connected to Firebase emulators')
     } catch (error) {
       console.log('Emulators already connected or not available')
     }

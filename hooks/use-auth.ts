@@ -15,6 +15,36 @@ import {
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 
+// Helper function to get user-friendly error messages
+const getErrorMessage = (errorCode: string): string => {
+  switch (errorCode) {
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your internet connection and try again.'
+    case 'auth/user-not-found':
+      return 'No account found with this email address.'
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.'
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists. Please sign in instead.'
+    case 'auth/weak-password':
+      return 'Password is too weak. Please choose a stronger password.'
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.'
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later.'
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.'
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled. Please contact support.'
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in was cancelled. Please try again.'
+    case 'auth/popup-blocked':
+      return 'Pop-up was blocked. Please allow pop-ups and try again.'
+    default:
+      return 'An error occurred. Please try again.'
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -51,7 +81,8 @@ export function useAuth() {
       const result = await signInWithEmailAndPassword(auth, email, password)
       return { success: true, user: result.user }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -73,7 +104,8 @@ export function useAuth() {
       
       return { success: true, user: result.user }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -90,7 +122,8 @@ export function useAuth() {
       const result = await signInWithPopup(auth, provider)
       return { success: true, user: result.user }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -106,7 +139,8 @@ export function useAuth() {
       await signOut(auth)
       return { success: true }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -122,7 +156,8 @@ export function useAuth() {
       await sendPasswordResetEmail(auth, email)
       return { success: true }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const errorMessage = getErrorMessage(error.code)
+      return { success: false, error: errorMessage }
     }
   }
 
