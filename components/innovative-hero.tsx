@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Play, Star, Users, Calendar } from "lucide-react"
@@ -39,10 +40,15 @@ const tourLocations = [
 ]
 
 export function InnovativeHero() {
+  const router = useRouter()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [currentLocationIndex, setCurrentLocationIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const handleBookTour = () => {
+    router.push("/booking")
+  }
 
   useEffect(() => {
     setIsVisible(true)
@@ -175,6 +181,7 @@ export function InnovativeHero() {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button
                 size="lg"
+                onClick={handleBookTour}
                 className="group relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
               >
                 <span className="relative z-10">Book Your Tour</span>

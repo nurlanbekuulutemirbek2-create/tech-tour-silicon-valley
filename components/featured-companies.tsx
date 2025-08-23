@@ -1,3 +1,6 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,6 +60,8 @@ const companies = [
 ]
 
 export function FeaturedCompanies() {
+  const router = useRouter()
+
   return (
     <section id="companies" className="py-20 lg:py-32">
       <div className="container mx-auto px-4">
@@ -117,7 +122,12 @@ export function FeaturedCompanies() {
                   </div>
                 </div>
 
-                <Button className="w-full group-hover:bg-primary/90 transition-colors">Book {company.name} Tour</Button>
+                <Button
+                  className="w-full group-hover:bg-primary/90 transition-colors"
+                  onClick={() => router.push("/booking")}
+                >
+                  Book {company.name} Tour
+                </Button>
               </CardContent>
             </Card>
           ))}

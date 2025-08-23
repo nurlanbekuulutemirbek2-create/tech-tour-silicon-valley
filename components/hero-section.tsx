@@ -1,8 +1,17 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Users, Star } from "lucide-react"
 
 export function HeroSection() {
+  const router = useRouter()
+
+  const handleBookTour = () => {
+    router.push("/booking")
+  }
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-card to-muted py-20 lg:py-32">
       <div className="container relative">
@@ -25,7 +34,7 @@ export function HeroSection() {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-base px-8">
+            <Button size="lg" className="text-base px-8" onClick={handleBookTour}>
               <Calendar className="mr-2 h-5 w-5" />
               Book Your Tour
             </Button>
