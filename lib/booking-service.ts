@@ -292,6 +292,8 @@ export class BookingService {
     }
 
     try {
+      console.log('🔍 Fetching user bookings for:', userId, 'status:', status)
+      
       const constraints: QueryConstraint[] = [where('userId', '==', userId)]
       
       if (status) {
@@ -303,13 +305,52 @@ export class BookingService {
       const bookingsQuery = query(collection(db, COLLECTIONS.BOOKINGS), ...constraints)
       const snapshot = await getDocs(bookingsQuery)
       
-      return snapshot.docs.map(doc => ({
+      const bookings = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Booking[]
-    } catch (error) {
+      
+      console.log(`✅ Found ${bookings.length} bookings for user`)
+      return bookings
+    } catch (error: any) {
+      // Handle index errors gracefully
+      if (error.code === 'failed-precondition' || error.message.includes('index')) {
+        console.warn('Index not ready for user bookings, falling back to simple query:', error.message)
+        
+        // Fallback to simple query without ordering
+        try {
+          const simpleConstraints: QueryConstraint[] = [where('userId', '==', userId)]
+          
+          if (status) {
+            simpleConstraints.push(where('status', '==', status))
+          }
+          
+          const simpleQuery = query(collection(db, COLLECTIONS.BOOKINGS), ...simpleConstraints)
+          const snapshot = await getDocs(simpleQuery)
+          
+          let bookings = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Booking[]
+          
+          // Sort client-side
+          bookings.sort((a, b) => {
+            return b.createdAt.toMillis() - a.createdAt.toMillis()
+          })
+          
+          console.log(`✅ Fallback query found ${bookings.length} bookings for user`)
+          return bookings
+        } catch (fallbackError) {
+          console.error('Fallback query also failed:', fallbackError)
+          // Return empty array instead of throwing error
+          console.log('Returning empty bookings array due to index issues')
+          return []
+        }
+      }
+      
       console.error('Error fetching user bookings:', error)
-      throw new Error('Failed to fetch user bookings')
+      // Return empty array instead of throwing error to prevent UI crashes
+      return []
     }
   }
 

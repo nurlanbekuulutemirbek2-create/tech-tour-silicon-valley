@@ -126,7 +126,14 @@ export function useBooking(): UseBookingReturn {
       const bookings = await BookingService.getUserBookings(user.uid, status)
       setUserBookings(bookings)
     } catch (error) {
-      setErrorBookings(error instanceof Error ? error.message : 'Failed to fetch user bookings')
+      console.warn('Error fetching user bookings:', error)
+      // Don't set error state for index issues, just log and continue
+      if (error instanceof Error && error.message.includes('index')) {
+        console.log('Index not ready, continuing with empty bookings')
+        setUserBookings([])
+      } else {
+        setErrorBookings(error instanceof Error ? error.message : 'Failed to fetch user bookings')
+      }
     } finally {
       setLoadingBookings(false)
     }
