@@ -1,4 +1,4 @@
-import { addDoc, collection, Timestamp } from 'firebase/firestore'
+import { addDoc, collection, Timestamp, getDocs, deleteDoc } from 'firebase/firestore'
 import { db } from './firebase'
 import { Tour, AvailableSlot } from './booking-service'
 
@@ -179,12 +179,42 @@ export async function clearDatabase() {
   try {
     console.log('🧹 Clearing database...')
     
-    // Note: In production, you'd want to implement proper deletion
-    // This is a simplified version for development
-    console.log('⚠️ Database clear function called - implement proper deletion in production')
+    // Delete all tours
+    const toursSnapshot = await getDocs(collection(db, 'tours'))
+    const tourDeletions = toursSnapshot.docs.map(doc => deleteDoc(doc.ref))
+    await Promise.all(tourDeletions)
+    console.log(`🗑️ Deleted ${toursSnapshot.docs.length} tours`)
+    
+    // Delete all available slots
+    const slotsSnapshot = await getDocs(collection(db, 'available_slots'))
+    const slotDeletions = slotsSnapshot.docs.map(doc => deleteDoc(doc.ref))
+    await Promise.all(slotDeletions)
+    console.log(`🗑️ Deleted ${slotsSnapshot.docs.length} available slots`)
+    
+    console.log('✅ Database cleared successfully')
     
   } catch (error) {
     console.error('❌ Error clearing database:', error)
+    throw error
+  }
+}
+
+// Function to reseed database with only unique tours
+export async function reseedDatabaseWithUniqueTours() {
+  try {
+    console.log('🔄 Reseeding database with unique tours...')
+    
+    // Clear existing data
+    await clearDatabase()
+    
+    // Seed with unique tours
+    const result = await seedDatabase()
+    
+    console.log('✅ Database reseeded successfully with unique tours')
+    return result
+    
+  } catch (error) {
+    console.error('❌ Error reseeding database:', error)
     throw error
   }
 }

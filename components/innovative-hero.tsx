@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Play, Star, Users, Calendar } from "lucide-react"
+import { VideoPreviewModal } from "./video-preview-modal"
 
 const tourLocations = [
   {
@@ -45,9 +46,14 @@ export function InnovativeHero() {
   const [isVisible, setIsVisible] = useState(false)
   const [currentLocationIndex, setCurrentLocationIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
 
   const handleBookTour = () => {
     router.push("/booking")
+  }
+
+  const handleWatchPreview = () => {
+    setIsVideoModalOpen(true)
   }
 
   useEffect(() => {
@@ -191,6 +197,7 @@ export function InnovativeHero() {
               <Button
                 variant="outline"
                 size="lg"
+                onClick={handleWatchPreview}
                 className="group border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 bg-transparent"
               >
                 <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
@@ -311,6 +318,12 @@ export function InnovativeHero() {
           <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" />
         </svg>
       </div>
+
+      {/* Video Preview Modal */}
+      <VideoPreviewModal 
+        isOpen={isVideoModalOpen} 
+        onClose={() => setIsVideoModalOpen(false)} 
+      />
     </section>
   )
 }

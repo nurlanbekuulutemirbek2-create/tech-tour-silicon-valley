@@ -10,6 +10,7 @@ interface UseBookingReturn {
   loadingTours: boolean
   errorTours: string | null
   fetchTours: (filters?: any) => Promise<void>
+  fetchUniqueToursByCompany: (filters?: any) => Promise<void>
   
   // Available Slots
   availableSlots: AvailableSlot[]
@@ -77,6 +78,23 @@ export function useBooking(): UseBookingReturn {
       setTours(toursData)
     } catch (error) {
       setErrorTours(error instanceof Error ? error.message : 'Failed to fetch tours')
+    } finally {
+      setLoadingTours(false)
+    }
+  }, [user])
+  
+  // Fetch unique tours by company (one tour per company)
+  const fetchUniqueToursByCompany = useCallback(async (filters?: any) => {
+    if (!user) return
+    
+    setLoadingTours(true)
+    setErrorTours(null)
+    
+    try {
+      const toursData = await BookingService.getUniqueToursByCompany(filters)
+      setTours(toursData)
+    } catch (error) {
+      setErrorTours(error instanceof Error ? error.message : 'Failed to fetch unique tours')
     } finally {
       setLoadingTours(false)
     }
@@ -239,6 +257,7 @@ export function useBooking(): UseBookingReturn {
     loadingTours,
     errorTours,
     fetchTours,
+    fetchUniqueToursByCompany,
     
     // Available Slots
     availableSlots,

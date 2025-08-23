@@ -198,6 +198,73 @@ export class BookingService {
     }
   }
 
+  // Get unique tours by company (one tour per company)
+  static async getUniqueToursByCompany(filters?: {
+    active?: boolean
+    popular?: boolean
+    maxPrice?: number
+  }): Promise<Tour[]> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
+    try {
+      console.log('🔍 Fetching unique tours by company with filters:', filters)
+      
+      // Use a simpler approach - get all tours and filter client-side
+      const toursQuery = query(collection(db, COLLECTIONS.TOURS))
+      const snapshot = await getDocs(toursQuery)
+      
+      let allTours = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Tour[]
+      
+      console.log('🔍 All tours fetched:', allTours.map(t => ({ company: t.company, id: t.id })))
+      
+      // Apply filters
+      if (filters?.active !== undefined) {
+        allTours = allTours.filter(tour => tour.active === filters.active)
+      }
+      if (filters?.popular) {
+        allTours = allTours.filter(tour => tour.popular === true)
+      }
+      if (filters?.maxPrice) {
+        allTours = allTours.filter(tour => tour.price <= filters.maxPrice!)
+      }
+      
+      console.log('🔍 Tours after filtering:', allTours.map(t => ({ company: t.company, id: t.id })))
+      
+      // Create a Map to ensure only one tour per company (keeps the first one encountered)
+      const uniqueToursMap = new Map<string, Tour>()
+      
+      allTours.forEach(tour => {
+        if (!uniqueToursMap.has(tour.company)) {
+          uniqueToursMap.set(tour.company, tour)
+          console.log(`✅ Added unique tour for ${tour.company}`)
+        } else {
+          console.log(`⚠️ Skipping duplicate tour for ${tour.company} (keeping: ${uniqueToursMap.get(tour.company)?.id}, skipping: ${tour.id})`)
+        }
+      })
+      
+      const uniqueTours = Array.from(uniqueToursMap.values())
+      
+      // Sort by popularity and rating
+      uniqueTours.sort((a, b) => {
+        if (a.popular !== b.popular) {
+          return b.popular ? 1 : -1
+        }
+        return b.rating - a.rating
+      })
+      
+      console.log(`✅ Found ${uniqueTours.length} unique tours by company:`, uniqueTours.map(t => t.company))
+      return uniqueTours
+    } catch (error: any) {
+      console.error('Error fetching unique tours by company:', error)
+      throw new Error('Failed to fetch tours')
+    }
+  }
+
   static async getTourById(tourId: string): Promise<Tour | null> {
     if (!db) {
       throw new Error('Firestore is not initialized')

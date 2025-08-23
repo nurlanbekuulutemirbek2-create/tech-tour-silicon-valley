@@ -3,12 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { seedDatabase } from "@/lib/seed-data"
+import { seedDatabase, reseedDatabaseWithUniqueTours } from "@/lib/seed-data"
 import { getDocs, collection } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 export function SeedDatabase() {
   const [isSeeding, setIsSeeding] = useState(false)
+  const [isReseeding, setIsReseeding] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
   const [stats, setStats] = useState<{
     tours: number
@@ -68,6 +69,28 @@ export function SeedDatabase() {
     }
   }
 
+  const reseedDatabaseData = async () => {
+    if (!db) {
+      setMessage("❌ Firestore is not initialized")
+      return
+    }
+
+    setIsReseeding(true)
+    setMessage("🔄 Reseeding database with unique tours...")
+
+    try {
+      const result = await reseedDatabaseWithUniqueTours()
+      setMessage(`✅ Database reseeded successfully! Added ${result.toursAdded} unique tours and ${result.slotsAdded} slots`)
+      
+      // Refresh stats
+      await checkDatabase()
+    } catch (error) {
+      setMessage(`❌ Error reseeding database: ${error}`)
+    } finally {
+      setIsReseeding(false)
+    }
+  }
+
   return (
     <Card className="p-6 max-w-md mx-auto">
       <h3 className="text-lg font-semibold mb-4">Database Debug</h3>
@@ -88,6 +111,15 @@ export function SeedDatabase() {
           className="w-full"
         >
           {isSeeding ? "Seeding..." : "Seed Database"}
+        </Button>
+
+        <Button 
+          onClick={reseedDatabaseData} 
+          disabled={isReseeding}
+          variant="outline"
+          className="w-full"
+        >
+          {isReseeding ? "Reseeding..." : "Reseed with Unique Tours"}
         </Button>
 
         {message && (

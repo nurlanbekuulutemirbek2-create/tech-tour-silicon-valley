@@ -15,12 +15,28 @@ interface SelectTourStepProps {
 }
 
 export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepProps) {
-  const { tours, loadingTours, errorTours, fetchTours } = useBooking()
+  const { tours, loadingTours, errorTours, fetchUniqueToursByCompany } = useBooking()
   const [selectedTour, setSelectedTour] = useState<Tour | null>(data.selectedTour)
 
   useEffect(() => {
-    fetchTours({ active: true })
-  }, [fetchTours])
+    console.log('🔄 SelectTourStep: Fetching unique tours by company')
+    fetchUniqueToursByCompany({ active: true })
+  }, [fetchUniqueToursByCompany])
+
+  useEffect(() => {
+    console.log('📊 SelectTourStep: Tours received:', tours.map(t => ({ company: t.company, id: t.id })))
+  }, [tours])
+
+  // Additional client-side filtering to ensure uniqueness
+  const uniqueTours = tours.reduce((acc: Tour[], tour) => {
+    const existingTour = acc.find(t => t.company === tour.company)
+    if (!existingTour) {
+      acc.push(tour)
+    }
+    return acc
+  }, [])
+
+  console.log('🔍 SelectTourStep: Unique tours after client-side filtering:', uniqueTours.map(t => ({ company: t.company, id: t.id })))
 
   const handleTourSelect = (tour: Tour) => {
     setSelectedTour(tour)
@@ -52,7 +68,7 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">Error loading tours: {errorTours}</p>
-        <Button onClick={() => fetchTours({ active: true })} variant="outline">
+        <Button onClick={() => fetchUniqueToursByCompany({ active: true })} variant="outline">
           Try Again
         </Button>
       </div>
@@ -67,7 +83,7 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
       </div>
 
       <div className="grid gap-6">
-        {tours.map((tour) => (
+        {uniqueTours.map((tour) => (
           <Card
             key={tour.id}
             className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
@@ -127,7 +143,7 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
         ))}
       </div>
 
-      {tours.length === 0 && !loadingTours && (
+      {uniqueTours.length === 0 && !loadingTours && (
         <div className="text-center py-12">
           <p className="text-gray-600">No tours available at the moment.</p>
         </div>
