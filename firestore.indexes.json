@@ -115,6 +115,42 @@
       ]
     },
     {
+      "collectionGroup": "available_slots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "tourId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "availableSpots",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "available_slots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "tourId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "availableSpots",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "bookings",
       "queryScope": "COLLECTION",
       "fields": [
