@@ -112,6 +112,8 @@ export class BookingService {
     }
 
     try {
+      console.log('🔍 Fetching tours with filters:', filters)
+      
       const constraints: QueryConstraint[] = []
       
       // Add filters for efficient querying
@@ -135,10 +137,13 @@ export class BookingService {
       const toursQuery = query(collection(db, COLLECTIONS.TOURS), ...constraints)
       const snapshot = await getDocs(toursQuery)
       
-      return snapshot.docs.map(doc => ({
+      const tours = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Tour[]
+      
+      console.log(`✅ Found ${tours.length} tours`)
+      return tours
     } catch (error: any) {
       // Handle index errors gracefully
       if (error.code === 'failed-precondition' || error.message.includes('index')) {
@@ -159,6 +164,8 @@ export class BookingService {
             id: doc.id,
             ...doc.data()
           })) as Tour[]
+          
+          console.log(`✅ Fallback query found ${tours.length} tours`)
           
           // Apply additional filters client-side
           if (filters?.company) {

@@ -4,7 +4,14 @@
 
 You're getting an index error because Firestore needs composite indexes for complex queries. Here's how to fix it quickly:
 
-### Option 1: Use the Direct Link (Fastest)
+### Current Error: Bookings Collection Index
+
+Click this link to create the missing index directly:
+```
+https://console.firebase.google.com/v1/r/project/verifyme-1c6b2/firestore/indexes?create_composite=Ck9wcm9qZWN0cy92ZXJpZnltZS0xYzZiMi9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvYm9va2luZ3MvaW5kZXhlcy9fEAEaCgoGdXNlcklkEAEaDQoJY3JlYXRlZEF0EAIaDAoIX19uYW1lX18QAg
+```
+
+### Previous Error: Tours Collection Index
 
 Click this link to create the missing index directly:
 ```
@@ -18,11 +25,10 @@ https://console.firebase.google.com/v1/r/project/verifyme-1c6b2/firestore/indexe
 3. Navigate to **Firestore Database** → **Indexes** tab
 4. Click **"Create index"**
 5. Configure the index:
-   - **Collection ID**: `tours`
+   - **Collection ID**: `bookings`
    - **Fields**:
-     - `active` (Ascending)
-     - `popular` (Descending)
-     - `rating` (Descending)
+     - `userId` (Ascending)
+     - `createdAt` (Descending)
    - **Query scope**: Collection
 
 ### Option 3: Deploy All Indexes

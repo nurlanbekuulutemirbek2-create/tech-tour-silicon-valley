@@ -10,6 +10,7 @@ import { DateTimeStep } from "@/components/booking/date-time-step"
 import { GuestInfoStep } from "@/components/booking/guest-info-step"
 import { PaymentStep } from "@/components/booking/payment-step"
 import { ConfirmationStep } from "@/components/booking/confirmation-step"
+import { SeedDatabase } from "@/components/debug/seed-database"
 
 export default function BookingPage() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -75,7 +76,14 @@ export default function BookingPage() {
       <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Booking Form */}
-          <div className="lg:col-span-2">{renderStep()}</div>
+          <div className="lg:col-span-2">
+            {renderStep()}
+            
+            {/* Temporary Debug Component */}
+            <div className="mt-8">
+              <SeedDatabase />
+            </div>
+          </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
