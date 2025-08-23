@@ -112,10 +112,11 @@ export function useBooking(): UseBookingReturn {
       console.log('✅ useBooking: Successfully set available slots:', slots.length)
     } catch (error) {
       console.warn('❌ useBooking: Error fetching available slots:', error)
-      // Don't set error state for index issues, just log and continue
-      if (error instanceof Error && error.message.includes('index')) {
-        console.log('Index not ready, continuing with empty slots')
+      // Don't set error state for index building issues, just log and continue
+      if (error instanceof Error && (error.message.includes('index') || error.message.includes('building'))) {
+        console.log('📝 Index is building, continuing with empty slots')
         setAvailableSlots([])
+        // Don't set error state for building indexes - this is expected
       } else {
         setErrorSlots(error instanceof Error ? error.message : 'Failed to fetch available slots')
       }

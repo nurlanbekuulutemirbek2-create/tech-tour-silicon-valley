@@ -221,11 +221,12 @@ export class BookingService {
       throw new Error('Firestore is not initialized')
     }
 
+    // Create timestamps once for use in all queries
+    const startTimestamp = Timestamp.fromDate(startDate)
+    const endTimestamp = Timestamp.fromDate(endDate)
+
     try {
       console.log('🔍 Fetching available slots for tour:', tourId, 'from:', startDate, 'to:', endDate)
-      
-      const startTimestamp = Timestamp.fromDate(startDate)
-      const endTimestamp = Timestamp.fromDate(endDate)
       
       const slotsQuery = query(
         collection(db, COLLECTIONS.SLOTS),
@@ -248,12 +249,17 @@ export class BookingService {
     } catch (error: any) {
       console.error('❌ Error fetching available slots:', error)
       
-      // Handle index errors gracefully
-      if (error.code === 'failed-precondition' || error.message.includes('index')) {
-        console.warn('Index not ready for available slots, falling back to simple query:', error.message)
+      // Handle index building errors gracefully
+      if (error.code === 'failed-precondition' || 
+          error.message.includes('index') || 
+          error.message.includes('building')) {
+        
+        console.warn('⚠️ Index is building, falling back to simple query:', error.message)
         
         // Fallback to simple query without complex ordering
         try {
+          console.log('🔄 Attempting fallback query for available slots...')
+          
           const simpleQuery = query(
             collection(db, COLLECTIONS.SLOTS),
             where('tourId', '==', tourId),
@@ -267,9 +273,6 @@ export class BookingService {
           })) as AvailableSlot[]
           
           // Filter by date range client-side
-          const startTimestamp = Timestamp.fromDate(startDate)
-          const endTimestamp = Timestamp.fromDate(endDate)
-          
           slots = slots.filter(slot => {
             const slotDate = slot.date
             return slotDate >= startTimestamp && slotDate <= endTimestamp
@@ -283,18 +286,60 @@ export class BookingService {
             return a.time.localeCompare(b.time)
           })
           
-          console.log(`✅ Fallback query found ${slots.length} available slots for tour ${tourId}`)
+          console.log(`✅ Fallback query successful! Found ${slots.length} available slots for tour ${tourId}`)
           return slots
-        } catch (fallbackError) {
-          console.error('Fallback query also failed:', fallbackError)
+        } catch (fallbackError: any) {
+          console.error('❌ Fallback query also failed:', fallbackError)
+          
+          // If fallback also fails due to building index, try even simpler query
+          if (fallbackError.message.includes('building') || fallbackError.message.includes('index')) {
+            console.log('🔄 Attempting ultra-simple fallback query...')
+            
+            try {
+              const ultraSimpleQuery = query(
+                collection(db, COLLECTIONS.SLOTS),
+                where('tourId', '==', tourId)
+              )
+              
+              const snapshot = await getDocs(ultraSimpleQuery)
+              let slots = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              })) as AvailableSlot[]
+              
+              // Filter everything client-side
+              slots = slots.filter(slot => {
+                const slotDate = slot.date
+                return slotDate >= startTimestamp && 
+                       slotDate <= endTimestamp && 
+                       slot.availableSpots > 0
+              })
+              
+              // Sort client-side
+              slots.sort((a, b) => {
+                if (a.date.toMillis() !== b.date.toMillis()) {
+                  return a.date.toMillis() - b.date.toMillis()
+                }
+                return a.time.localeCompare(b.time)
+              })
+              
+              console.log(`✅ Ultra-simple fallback successful! Found ${slots.length} available slots for tour ${tourId}`)
+              return slots
+            } catch (ultraError) {
+              console.error('❌ Ultra-simple fallback also failed:', ultraError)
+              console.log('📝 Returning empty slots array - indexes are still building')
+              return []
+            }
+          }
+          
           // Return empty array instead of throwing error
-          console.log('Returning empty slots array due to index issues')
+          console.log('📝 Returning empty slots array due to index issues')
           return []
         }
       }
       
       // For other errors, return empty array instead of throwing
-      console.log('Returning empty slots array due to error')
+      console.log('📝 Returning empty slots array due to error')
       return []
     }
   }
