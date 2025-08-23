@@ -1,69 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
-const tours = [
-  {
-    id: "apple",
-    company: "Apple",
-    location: "Apple Park, Cupertino",
-    description: "Explore the iconic Apple Park campus and visitor center",
-    highlights: ["Innovation Hub", "Campus Walk", "Visitor Center", "Apple Store"],
-    rating: 4.9,
-    duration: "3 hours",
-    price: 89,
-    image: "/placeholder-tsz55.png",
-    popular: true,
-  },
-  {
-    id: "google",
-    company: "Google",
-    location: "Googleplex, Mountain View",
-    description: "Discover the colorful world of Google's headquarters",
-    highlights: ["Android Lawn", "Campus Tour", "Innovation Labs", "Google Store"],
-    rating: 4.8,
-    duration: "2.5 hours",
-    price: 79,
-    image: "/placeholder-ajt2y.png",
-    trending: true,
-  },
-  {
-    id: "meta",
-    company: "Meta",
-    location: "Meta HQ, Menlo Park",
-    description: "Step into the future of social connection and VR",
-    highlights: ["VR Experience", "Campus Walk", "Innovation Center", "Photo Ops"],
-    rating: 4.7,
-    duration: "2 hours",
-    price: 69,
-    image: "/placeholder-39dqp.png",
-  },
-  {
-    id: "tesla",
-    company: "Tesla",
-    location: "Tesla Factory, Fremont",
-    description: "Witness the future of sustainable transportation",
-    highlights: ["Factory Tour", "Model Showcase", "Supercharger Demo", "Innovation Talk"],
-    rating: 4.8,
-    duration: "3.5 hours",
-    price: 99,
-    image: "/placeholder-q8bjt.png",
-  },
-  {
-    id: "netflix",
-    company: "Netflix",
-    location: "Netflix HQ, Los Gatos",
-    description: "Go behind the scenes of the streaming revolution",
-    highlights: ["Studio Tour", "Content Creation", "Tech Demo", "Exclusive Previews"],
-    rating: 4.6,
-    duration: "2 hours",
-    price: 75,
-    image: "/placeholder-nhnoo.png",
-  },
-]
+import { useBooking } from "@/hooks/use-booking"
+import { Tour } from "@/lib/booking-service"
+import { Loader2 } from "lucide-react"
 
 interface SelectTourStepProps {
   onNext: () => void
@@ -72,9 +15,14 @@ interface SelectTourStepProps {
 }
 
 export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepProps) {
-  const [selectedTour, setSelectedTour] = useState(data.selectedTour)
+  const { tours, loadingTours, errorTours, fetchTours } = useBooking()
+  const [selectedTour, setSelectedTour] = useState<Tour | null>(data.selectedTour)
 
-  const handleTourSelect = (tour: any) => {
+  useEffect(() => {
+    fetchTours({ active: true })
+  }, [fetchTours])
+
+  const handleTourSelect = (tour: Tour) => {
     setSelectedTour(tour)
     onDataUpdate({ selectedTour: tour })
   }
@@ -83,6 +31,32 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
     if (selectedTour) {
       onNext()
     }
+  }
+
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+  }
+
+  if (loadingTours) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <span className="ml-2 text-gray-600">Loading tours...</span>
+      </div>
+    )
+  }
+
+  if (errorTours) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">Error loading tours: {errorTours}</p>
+        <Button onClick={() => fetchTours({ active: true })} variant="outline">
+          Try Again
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -137,7 +111,9 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
                       <span className="font-medium">{tour.rating}</span>
                     </div>
                     <span className="text-gray-500">•</span>
-                    <span className="text-gray-600">{tour.duration}</span>
+                    <span className="text-gray-600">{formatDuration(tour.duration)}</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-gray-600">{tour.availableSlots} spots left</span>
                   </div>
 
                   <div className="flex gap-2">
@@ -151,8 +127,18 @@ export function SelectTourStep({ onNext, onDataUpdate, data }: SelectTourStepPro
         ))}
       </div>
 
+      {tours.length === 0 && !loadingTours && (
+        <div className="text-center py-12">
+          <p className="text-gray-600">No tours available at the moment.</p>
+        </div>
+      )}
+
       <div className="flex justify-end pt-6">
-        <Button onClick={handleNext} disabled={!selectedTour} className="bg-green-600 hover:bg-green-700 px-8">
+        <Button 
+          onClick={handleNext} 
+          disabled={!selectedTour} 
+          className="bg-green-600 hover:bg-green-700 px-8"
+        >
           Continue to Date & Time
         </Button>
       </div>
