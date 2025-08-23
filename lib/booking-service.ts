@@ -222,6 +222,8 @@ export class BookingService {
     }
 
     try {
+      console.log('🔍 Fetching available slots for tour:', tourId, 'from:', startDate, 'to:', endDate)
+      
       const startTimestamp = Timestamp.fromDate(startDate)
       const endTimestamp = Timestamp.fromDate(endDate)
       
@@ -236,13 +238,64 @@ export class BookingService {
       )
       
       const snapshot = await getDocs(slotsQuery)
-      return snapshot.docs.map(doc => ({
+      const slots = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as AvailableSlot[]
-    } catch (error) {
-      console.error('Error fetching available slots:', error)
-      throw new Error('Failed to fetch available slots')
+      
+      console.log(`✅ Found ${slots.length} available slots for tour ${tourId}`)
+      return slots
+    } catch (error: any) {
+      console.error('❌ Error fetching available slots:', error)
+      
+      // Handle index errors gracefully
+      if (error.code === 'failed-precondition' || error.message.includes('index')) {
+        console.warn('Index not ready for available slots, falling back to simple query:', error.message)
+        
+        // Fallback to simple query without complex ordering
+        try {
+          const simpleQuery = query(
+            collection(db, COLLECTIONS.SLOTS),
+            where('tourId', '==', tourId),
+            where('availableSpots', '>', 0)
+          )
+          
+          const snapshot = await getDocs(simpleQuery)
+          let slots = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as AvailableSlot[]
+          
+          // Filter by date range client-side
+          const startTimestamp = Timestamp.fromDate(startDate)
+          const endTimestamp = Timestamp.fromDate(endDate)
+          
+          slots = slots.filter(slot => {
+            const slotDate = slot.date
+            return slotDate >= startTimestamp && slotDate <= endTimestamp
+          })
+          
+          // Sort client-side
+          slots.sort((a, b) => {
+            if (a.date.toMillis() !== b.date.toMillis()) {
+              return a.date.toMillis() - b.date.toMillis()
+            }
+            return a.time.localeCompare(b.time)
+          })
+          
+          console.log(`✅ Fallback query found ${slots.length} available slots for tour ${tourId}`)
+          return slots
+        } catch (fallbackError) {
+          console.error('Fallback query also failed:', fallbackError)
+          // Return empty array instead of throwing error
+          console.log('Returning empty slots array due to index issues')
+          return []
+        }
+      }
+      
+      // For other errors, return empty array instead of throwing
+      console.log('Returning empty slots array due to error')
+      return []
     }
   }
 

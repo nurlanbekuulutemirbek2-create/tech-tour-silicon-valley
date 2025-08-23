@@ -106,10 +106,19 @@ export function useBooking(): UseBookingReturn {
     setErrorSlots(null)
     
     try {
+      console.log('🔄 useBooking: Fetching available slots for tour:', tourId)
       const slots = await BookingService.getAvailableSlots(tourId, startDate, endDate)
       setAvailableSlots(slots)
+      console.log('✅ useBooking: Successfully set available slots:', slots.length)
     } catch (error) {
-      setErrorSlots(error instanceof Error ? error.message : 'Failed to fetch available slots')
+      console.warn('❌ useBooking: Error fetching available slots:', error)
+      // Don't set error state for index issues, just log and continue
+      if (error instanceof Error && error.message.includes('index')) {
+        console.log('Index not ready, continuing with empty slots')
+        setAvailableSlots([])
+      } else {
+        setErrorSlots(error instanceof Error ? error.message : 'Failed to fetch available slots')
+      }
     } finally {
       setLoadingSlots(false)
     }

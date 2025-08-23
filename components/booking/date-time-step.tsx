@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,15 +23,19 @@ export function DateTimeStep({ onNext, onPrev, onDataUpdate, data }: DateTimeSte
   const [selectedTime, setSelectedTime] = useState<string | undefined>(data.time)
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(data.selectedSlot)
 
-  // Calculate date range (next 30 days)
-  const startDate = startOfDay(new Date())
-  const endDate = addDays(startDate, 30)
+  // Memoize date range to prevent infinite re-renders
+  const dateRange = useMemo(() => {
+    const startDate = startOfDay(new Date())
+    const endDate = addDays(startDate, 30)
+    return { startDate, endDate }
+  }, [])
 
   useEffect(() => {
     if (data.selectedTour?.id) {
-      fetchAvailableSlots(data.selectedTour.id, startDate, endDate)
+      console.log('🔄 Fetching available slots for tour:', data.selectedTour.id)
+      fetchAvailableSlots(data.selectedTour.id, dateRange.startDate, dateRange.endDate)
     }
-  }, [data.selectedTour?.id, fetchAvailableSlots, startDate, endDate])
+  }, [data.selectedTour?.id, fetchAvailableSlots, dateRange.startDate, dateRange.endDate])
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date)
@@ -90,7 +94,7 @@ export function DateTimeStep({ onNext, onPrev, onDataUpdate, data }: DateTimeSte
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">Error loading available dates: {errorSlots}</p>
-        <Button onClick={() => fetchAvailableSlots(data.selectedTour.id, startDate, endDate)} variant="outline">
+        <Button onClick={() => fetchAvailableSlots(data.selectedTour.id, dateRange.startDate, dateRange.endDate)} variant="outline">
           Try Again
         </Button>
       </div>
