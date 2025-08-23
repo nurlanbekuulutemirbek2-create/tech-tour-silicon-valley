@@ -16,6 +16,10 @@ interface GuestInfoStepProps {
 }
 
 export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoStepProps) {
+  // Debug logging to track data flow
+  console.log('🔍 GuestInfoStep - Received data:', data)
+  console.log('🔍 GuestInfoStep - data.guestInfo:', data.guestInfo)
+  
   const [guestInfo, setGuestInfo] = useState(
     data.guestInfo || {
       fullName: "",
@@ -39,8 +43,14 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
     }
   }
 
+  // Ensure numberOfGuests is always a number
+  const numberOfGuests = typeof guestInfo.numberOfGuests === 'number' ? guestInfo.numberOfGuests : 1
   const basePrice = data.selectedTour?.price || 0
-  const totalPrice = basePrice * guestInfo.numberOfGuests
+  const totalPrice = basePrice * numberOfGuests
+
+  console.log('🔍 GuestInfoStep - Processed numberOfGuests:', numberOfGuests)
+  console.log('🔍 GuestInfoStep - Processed basePrice:', basePrice)
+  console.log('🔍 GuestInfoStep - Processed totalPrice:', totalPrice)
 
   return (
     <div className="space-y-6">
@@ -57,7 +67,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
               <Label htmlFor="fullName">Full Name *</Label>
               <Input
                 id="fullName"
-                value={guestInfo.fullName}
+                value={guestInfo.fullName || ""}
                 onChange={(e) => handleInputChange("fullName", e.target.value)}
                 placeholder="Enter your full name"
                 className="mt-1"
@@ -69,7 +79,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
               <Input
                 id="email"
                 type="email"
-                value={guestInfo.email}
+                value={guestInfo.email || ""}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="your.email@example.com"
                 className="mt-1"
@@ -80,7 +90,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
               <Label htmlFor="phone">Phone Number *</Label>
               <div className="flex gap-2 mt-1">
                 <Select
-                  value={guestInfo.countryCode}
+                  value={guestInfo.countryCode || "+1"}
                   onValueChange={(value) => handleInputChange("countryCode", value)}
                 >
                   <SelectTrigger className="w-24">
@@ -96,7 +106,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
                 </Select>
                 <Input
                   id="phone"
-                  value={guestInfo.phone}
+                  value={guestInfo.phone || ""}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="(555) 123-4567"
                   className="flex-1"
@@ -110,7 +120,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
             <div>
               <Label htmlFor="guests">Number of Guests</Label>
               <Select
-                value={guestInfo.numberOfGuests.toString()}
+                value={numberOfGuests.toString()}
                 onValueChange={(value) => handleInputChange("numberOfGuests", Number.parseInt(value))}
               >
                 <SelectTrigger className="mt-1">
@@ -130,7 +140,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
               <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
               <Textarea
                 id="specialRequests"
-                value={guestInfo.specialRequests}
+                value={guestInfo.specialRequests || ""}
                 onChange={(e) => handleInputChange("specialRequests", e.target.value)}
                 placeholder="Accessibility needs, language preference, dietary restrictions, etc."
                 className="mt-1"
@@ -151,7 +161,7 @@ export function GuestInfoStep({ onNext, onPrev, onDataUpdate, data }: GuestInfoS
           </div>
           <div className="flex justify-between">
             <span>Number of guests</span>
-            <span>{guestInfo.numberOfGuests}</span>
+            <span>{numberOfGuests}</span>
           </div>
           <div className="border-t border-green-300 pt-2 mt-2">
             <div className="flex justify-between font-semibold text-lg">

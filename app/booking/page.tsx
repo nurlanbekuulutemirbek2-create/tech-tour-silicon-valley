@@ -17,7 +17,14 @@ export default function BookingPage() {
     date: null,
     time: null,
     selectedSlot: null,
-    guestInfo: {},
+    guestInfo: {
+      fullName: "",
+      email: "",
+      phone: "",
+      countryCode: "+1",
+      numberOfGuests: 1,
+      specialRequests: "",
+    },
     paymentInfo: {}
   })
 
