@@ -124,7 +124,7 @@ export function FeaturedCompanies() {
 
                 <Button
                   className="w-full group-hover:bg-primary/90 transition-colors"
-                  onClick={() => router.push("/booking")}
+                  onClick={() => router.push(`/booking?tour=${encodeURIComponent(company.name)}`)}
                 >
                   Book {company.name} Tour
                 </Button>
