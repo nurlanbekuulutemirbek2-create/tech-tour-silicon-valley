@@ -51,6 +51,34 @@
       ]
     },
     {
+      "collectionGroup": "tours",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "popular",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "tours",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trending",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "available_slots",
       "queryScope": "COLLECTION",
       "fields": [

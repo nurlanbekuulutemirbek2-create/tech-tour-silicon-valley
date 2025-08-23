@@ -107,6 +107,10 @@ export class BookingService {
     popular?: boolean
     maxPrice?: number
   }): Promise<Tour[]> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const constraints: QueryConstraint[] = []
       
@@ -135,13 +139,63 @@ export class BookingService {
         id: doc.id,
         ...doc.data()
       })) as Tour[]
-    } catch (error) {
+    } catch (error: any) {
+      // Handle index errors gracefully
+      if (error.code === 'failed-precondition' || error.message.includes('index')) {
+        console.warn('Index not ready, falling back to simple query:', error.message)
+        
+        // Fallback to simple query without complex ordering
+        try {
+          const simpleConstraints: QueryConstraint[] = []
+          
+          if (filters?.active !== undefined) {
+            simpleConstraints.push(where('active', '==', filters.active))
+          }
+          
+          const simpleQuery = query(collection(db, COLLECTIONS.TOURS), ...simpleConstraints)
+          const snapshot = await getDocs(simpleQuery)
+          
+          let tours = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Tour[]
+          
+          // Apply additional filters client-side
+          if (filters?.company) {
+            tours = tours.filter(tour => tour.company === filters.company)
+          }
+          if (filters?.popular) {
+            tours = tours.filter(tour => tour.popular === true)
+          }
+          if (filters?.maxPrice) {
+            tours = tours.filter(tour => tour.price <= filters.maxPrice!)
+          }
+          
+          // Sort client-side
+          tours.sort((a, b) => {
+            if (a.popular !== b.popular) {
+              return b.popular ? 1 : -1
+            }
+            return b.rating - a.rating
+          })
+          
+          return tours
+        } catch (fallbackError) {
+          console.error('Fallback query also failed:', fallbackError)
+          throw new Error('Failed to fetch tours. Please try again later.')
+        }
+      }
+      
       console.error('Error fetching tours:', error)
       throw new Error('Failed to fetch tours')
     }
   }
 
   static async getTourById(tourId: string): Promise<Tour | null> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const tourDoc = await getDoc(doc(db, COLLECTIONS.TOURS, tourId))
       if (tourDoc.exists()) {
@@ -156,6 +210,10 @@ export class BookingService {
 
   // Available Slots with date-based indexing
   static async getAvailableSlots(tourId: string, startDate: Date, endDate: Date): Promise<AvailableSlot[]> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const startTimestamp = Timestamp.fromDate(startDate)
       const endTimestamp = Timestamp.fromDate(endDate)
@@ -183,6 +241,10 @@ export class BookingService {
 
   // Booking Management with batch operations for data consistency
   static async createBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const batch = writeBatch(db)
       
@@ -205,7 +267,7 @@ export class BookingService {
       // Update user profile with booking history
       const userRef = doc(db, COLLECTIONS.USERS, bookingData.userId)
       batch.update(userRef, {
-        bookingHistory: bookingData.id,
+        bookingHistory: bookingRef.id,
         updatedAt: serverTimestamp()
       })
       
@@ -218,6 +280,10 @@ export class BookingService {
   }
 
   static async getUserBookings(userId: string, status?: Booking['status']): Promise<Booking[]> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const constraints: QueryConstraint[] = [where('userId', '==', userId)]
       
@@ -241,6 +307,10 @@ export class BookingService {
   }
 
   static async updateBookingStatus(bookingId: string, status: Booking['status']): Promise<void> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       await updateDoc(doc(db, COLLECTIONS.BOOKINGS, bookingId), {
         status,
@@ -254,6 +324,10 @@ export class BookingService {
 
   // User Profile Management
   static async createUserProfile(userData: Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       await addDoc(collection(db, COLLECTIONS.USERS), {
         ...userData,
@@ -267,6 +341,10 @@ export class BookingService {
   }
 
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId))
       if (userDoc.exists()) {
@@ -280,6 +358,10 @@ export class BookingService {
   }
 
   static async updateUserPreferences(userId: string, preferences: Partial<UserProfile['preferences']>): Promise<void> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
         preferences: preferences,
@@ -296,6 +378,10 @@ export class BookingService {
     pageSize: number = 10,
     lastDoc?: QueryDocumentSnapshot<DocumentData>
   ): Promise<{ tours: Tour[], lastDoc: QueryDocumentSnapshot<DocumentData> | null }> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const constraints: QueryConstraint[] = [
         where('active', '==', true),
@@ -326,6 +412,10 @@ export class BookingService {
 
   // Search functionality with text indexing
   static async searchTours(searchTerm: string): Promise<Tour[]> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       // Note: For production, consider using Algolia or similar for full-text search
       // This is a simple implementation using Firestore queries
@@ -363,6 +453,10 @@ export class BookingService {
     averageRating: number
     popularTours: string[]
   }> {
+    if (!db) {
+      throw new Error('Firestore is not initialized')
+    }
+
     try {
       const startTimestamp = Timestamp.fromDate(startDate)
       const endTimestamp = Timestamp.fromDate(endDate)
