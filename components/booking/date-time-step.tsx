@@ -70,15 +70,69 @@ export function DateTimeStep({ onNext, onPrev, onDataUpdate, data }: DateTimeSte
     return acc
   }, {} as Record<string, AvailableSlot[]>)
 
-  // Get available times for selected date
+  // Get available times for selected date, filtered by current time if today
   const availableTimesForDate = selectedDate 
-    ? slotsByDate[format(selectedDate, 'yyyy-MM-dd')] || []
+    ? (slotsByDate[format(selectedDate, 'yyyy-MM-dd')] || []).filter(slot => {
+        // If selected date is today, filter out past time slots
+        const today = new Date()
+        const isToday = format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+        
+        if (isToday) {
+          const currentHour = today.getHours()
+          const currentMinute = today.getMinutes()
+          
+          // Parse the slot time (assuming format like "13:00" or "16:00")
+          const timeParts = slot.time.split(':')
+          if (timeParts.length !== 2) {
+            console.warn(`Invalid time format: ${slot.time}`)
+            return true // Keep invalid formats to avoid breaking the UI
+          }
+          
+          const [slotHour, slotMinute] = timeParts.map(Number)
+          
+          // Check if slot time is in the past
+          if (slotHour < currentHour || (slotHour === currentHour && slotMinute <= currentMinute)) {
+            return false
+          }
+        }
+        
+        return true
+      })
     : []
 
-  // Disable dates that have no available slots
+  // Disable dates that have no available slots or only past slots for today
   const disabledDates = (date: Date) => {
     const dateKey = format(date, 'yyyy-MM-dd')
-    return !slotsByDate[dateKey] || slotsByDate[dateKey].length === 0
+    const slotsForDate = slotsByDate[dateKey] || []
+    
+    if (slotsForDate.length === 0) {
+      return true
+    }
+    
+    // If it's today, check if there are any future time slots
+    const today = new Date()
+    const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+    
+    if (isToday) {
+      const currentHour = today.getHours()
+      const currentMinute = today.getMinutes()
+      
+      // Check if any slots are in the future
+      const hasFutureSlots = slotsForDate.some(slot => {
+        const timeParts = slot.time.split(':')
+        if (timeParts.length !== 2) {
+          console.warn(`Invalid time format: ${slot.time}`)
+          return true // Keep invalid formats to avoid breaking the UI
+        }
+        
+        const [slotHour, slotMinute] = timeParts.map(Number)
+        return slotHour > currentHour || (slotHour === currentHour && slotMinute > currentMinute)
+      })
+      
+      return !hasFutureSlots
+    }
+    
+    return false
   }
 
   if (loadingSlots) {
@@ -128,6 +182,7 @@ export function DateTimeStep({ onNext, onPrev, onDataUpdate, data }: DateTimeSte
           <div className="mt-4 text-sm text-gray-600">
             <p>• Available dates are highlighted</p>
             <p>• Grayed out dates have no available slots</p>
+            <p>• Today only shows future time slots</p>
           </div>
         </Card>
 
@@ -166,8 +221,18 @@ export function DateTimeStep({ onNext, onPrev, onDataUpdate, data }: DateTimeSte
                 ))
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No available times for this date</p>
-                  <p className="text-sm text-gray-500 mt-2">Please select a different date</p>
+                  <p className="text-gray-600">
+                    {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') 
+                      ? "No future time slots available for today" 
+                      : "No available times for this date"
+                    }
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                      ? "All slots for today have passed. Please select a future date."
+                      : "Please select a different date"
+                    }
+                  </p>
                 </div>
               )}
             </div>
