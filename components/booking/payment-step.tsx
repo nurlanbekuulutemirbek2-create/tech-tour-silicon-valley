@@ -26,6 +26,7 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [promoCode, setPromoCode] = useState("")
   const [promoApplied, setPromoApplied] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({})
   const [cardInfo, setCardInfo] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -73,20 +74,56 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
     if (paymentMethod === "card") {
       const errors = []
       
-      if (!cardInfo.cardNumber || cardInfo.cardNumber.replace(/\s/g, '').length < 13) {
-        errors.push("Please enter a valid card number")
+      // Card number validation
+      const cardNumberClean = cardInfo.cardNumber.replace(/\s/g, '')
+      if (!cardInfo.cardNumber) {
+        errors.push("Card number is required")
+      } else if (cardNumberClean.length < 13) {
+        errors.push("Card number must be at least 13 digits")
+      } else if (cardNumberClean.length > 19) {
+        errors.push("Card number cannot exceed 19 digits")
+      } else if (!/^\d+$/.test(cardNumberClean)) {
+        errors.push("Card number must contain only numbers")
       }
       
-      if (!cardInfo.expiryDate || !/^\d{2}\/\d{2}$/.test(cardInfo.expiryDate)) {
-        errors.push("Please enter a valid expiry date (MM/YY)")
+      // Expiry date validation
+      if (!cardInfo.expiryDate) {
+        errors.push("Expiry date is required")
+      } else if (!/^\d{2}\/\d{2}$/.test(cardInfo.expiryDate)) {
+        errors.push("Expiry date must be in MM/YY format")
+      } else {
+        const [month, year] = cardInfo.expiryDate.split('/').map(Number)
+        const currentDate = new Date()
+        const currentYear = currentDate.getFullYear() % 100
+        const currentMonth = currentDate.getMonth() + 1
+        
+        if (month < 1 || month > 12) {
+          errors.push("Month must be between 01 and 12")
+        } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+          errors.push("Card has expired")
+        }
       }
       
-      if (!cardInfo.cvv || cardInfo.cvv.length < 3) {
-        errors.push("Please enter a valid CVV")
+      // CVV validation
+      if (!cardInfo.cvv) {
+        errors.push("CVV is required")
+      } else if (cardInfo.cvv.length < 3) {
+        errors.push("CVV must be at least 3 digits")
+      } else if (cardInfo.cvv.length > 4) {
+        errors.push("CVV cannot exceed 4 digits")
+      } else if (!/^\d+$/.test(cardInfo.cvv)) {
+        errors.push("CVV must contain only numbers")
       }
       
-      if (!cardInfo.cardholderName || cardInfo.cardholderName.trim().length < 2) {
-        errors.push("Please enter the cardholder name")
+      // Cardholder name validation
+      if (!cardInfo.cardholderName) {
+        errors.push("Cardholder name is required")
+      } else if (cardInfo.cardholderName.trim().length < 2) {
+        errors.push("Cardholder name must be at least 2 characters")
+      } else if (cardInfo.cardholderName.trim().length > 50) {
+        errors.push("Cardholder name cannot exceed 50 characters")
+      } else if (!/^[a-zA-Z\s]+$/.test(cardInfo.cardholderName.trim())) {
+        errors.push("Cardholder name can only contain letters and spaces")
       }
       
       return errors
@@ -107,13 +144,26 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
     // Validate card details if card payment is selected
     const validationErrors = validateCardDetails()
     if (validationErrors.length > 0) {
+      // Set field errors for visual feedback
+      const newFieldErrors: {[key: string]: string} = {}
+      validationErrors.forEach(error => {
+        if (error.includes("Card number")) newFieldErrors.cardNumber = error
+        else if (error.includes("Expiry date") || error.includes("expired")) newFieldErrors.expiryDate = error
+        else if (error.includes("CVV")) newFieldErrors.cvv = error
+        else if (error.includes("Cardholder name")) newFieldErrors.cardholderName = error
+      })
+      setFieldErrors(newFieldErrors)
+      
       toast({
-        title: "Validation Error",
+        title: "Please fix the following errors:",
         description: validationErrors.join(", "),
         variant: "destructive",
       })
       return
     }
+    
+    // Clear field errors if validation passes
+    setFieldErrors({})
 
     setIsProcessing(true)
 
@@ -136,7 +186,7 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
         status: 'confirmed' as const,
         paymentStatus: 'paid' as const,
         paymentMethod: paymentMethod,
-        specialRequests: data.guestInfo.specialRequests || undefined,
+        specialRequests: data.guestInfo.specialRequests || null,
       }
 
       // Create booking in Firebase
@@ -246,10 +296,18 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                     id="cardNumber"
                     placeholder="1234 5678 9012 3456"
                     value={cardInfo.cardNumber}
-                    onChange={(e) => setCardInfo({ ...cardInfo, cardNumber: formatCardNumber(e.target.value) })}
+                    onChange={(e) => {
+                      setCardInfo({ ...cardInfo, cardNumber: formatCardNumber(e.target.value) })
+                      if (fieldErrors.cardNumber) {
+                        setFieldErrors(prev => ({ ...prev, cardNumber: '' }))
+                      }
+                    }}
                     maxLength={19}
-                    className="mt-1"
+                    className={`mt-1 ${fieldErrors.cardNumber ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
+                  {fieldErrors.cardNumber && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.cardNumber}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -259,10 +317,18 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                       id="expiryDate"
                       placeholder="MM/YY"
                       value={cardInfo.expiryDate}
-                      onChange={(e) => setCardInfo({ ...cardInfo, expiryDate: formatExpiryDate(e.target.value) })}
+                      onChange={(e) => {
+                        setCardInfo({ ...cardInfo, expiryDate: formatExpiryDate(e.target.value) })
+                        if (fieldErrors.expiryDate) {
+                          setFieldErrors(prev => ({ ...prev, expiryDate: '' }))
+                        }
+                      }}
                       maxLength={5}
-                      className="mt-1"
+                      className={`mt-1 ${fieldErrors.expiryDate ? 'border-red-500 focus:border-red-500' : ''}`}
                     />
+                    {fieldErrors.expiryDate && (
+                      <p className="text-red-500 text-sm mt-1">{fieldErrors.expiryDate}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="cvv">CVV</Label>
@@ -270,10 +336,18 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                       id="cvv"
                       placeholder="123"
                       value={cardInfo.cvv}
-                      onChange={(e) => setCardInfo({ ...cardInfo, cvv: e.target.value.replace(/\D/g, '') })}
+                      onChange={(e) => {
+                        setCardInfo({ ...cardInfo, cvv: e.target.value.replace(/\D/g, '') })
+                        if (fieldErrors.cvv) {
+                          setFieldErrors(prev => ({ ...prev, cvv: '' }))
+                        }
+                      }}
                       maxLength={4}
-                      className="mt-1"
+                      className={`mt-1 ${fieldErrors.cvv ? 'border-red-500 focus:border-red-500' : ''}`}
                     />
+                    {fieldErrors.cvv && (
+                      <p className="text-red-500 text-sm mt-1">{fieldErrors.cvv}</p>
+                    )}
                   </div>
                 </div>
 
@@ -283,9 +357,17 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                     id="cardholderName"
                     placeholder="John Doe"
                     value={cardInfo.cardholderName}
-                    onChange={(e) => setCardInfo({ ...cardInfo, cardholderName: e.target.value })}
-                    className="mt-1"
+                    onChange={(e) => {
+                      setCardInfo({ ...cardInfo, cardholderName: e.target.value })
+                      if (fieldErrors.cardholderName) {
+                        setFieldErrors(prev => ({ ...prev, cardholderName: '' }))
+                      }
+                    }}
+                    className={`mt-1 ${fieldErrors.cardholderName ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
+                  {fieldErrors.cardholderName && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.cardholderName}</p>
+                  )}
                 </div>
               </div>
             </Card>
