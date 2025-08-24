@@ -38,10 +38,60 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
   const taxes = (basePrice - discount) * 0.08
   const totalPrice = basePrice - discount + taxes
 
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    const matches = v.match(/\d{4,16}/g)
+    const match = matches && matches[0] || ''
+    const parts = []
+    
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4))
+    }
+    
+    if (parts.length) {
+      return parts.join(' ')
+    } else {
+      return v
+    }
+  }
+
+  const formatExpiryDate = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4)
+    }
+    return v
+  }
+
   const handlePromoApply = () => {
     if (promoCode.toLowerCase() === "welcome10") {
       setPromoApplied(true)
     }
+  }
+
+  const validateCardDetails = () => {
+    if (paymentMethod === "card") {
+      const errors = []
+      
+      if (!cardInfo.cardNumber || cardInfo.cardNumber.replace(/\s/g, '').length < 13) {
+        errors.push("Please enter a valid card number")
+      }
+      
+      if (!cardInfo.expiryDate || !/^\d{2}\/\d{2}$/.test(cardInfo.expiryDate)) {
+        errors.push("Please enter a valid expiry date (MM/YY)")
+      }
+      
+      if (!cardInfo.cvv || cardInfo.cvv.length < 3) {
+        errors.push("Please enter a valid CVV")
+      }
+      
+      if (!cardInfo.cardholderName || cardInfo.cardholderName.trim().length < 2) {
+        errors.push("Please enter the cardholder name")
+      }
+      
+      return errors
+    }
+    return []
   }
 
   const handlePayment = async () => {
@@ -49,6 +99,17 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
       toast({
         title: "Authentication Error",
         description: "Please sign in to complete your booking.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate card details if card payment is selected
+    const validationErrors = validateCardDetails()
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
         variant: "destructive",
       })
       return
@@ -185,7 +246,8 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                     id="cardNumber"
                     placeholder="1234 5678 9012 3456"
                     value={cardInfo.cardNumber}
-                    onChange={(e) => setCardInfo({ ...cardInfo, cardNumber: e.target.value })}
+                    onChange={(e) => setCardInfo({ ...cardInfo, cardNumber: formatCardNumber(e.target.value) })}
+                    maxLength={19}
                     className="mt-1"
                   />
                 </div>
@@ -197,7 +259,8 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                       id="expiryDate"
                       placeholder="MM/YY"
                       value={cardInfo.expiryDate}
-                      onChange={(e) => setCardInfo({ ...cardInfo, expiryDate: e.target.value })}
+                      onChange={(e) => setCardInfo({ ...cardInfo, expiryDate: formatExpiryDate(e.target.value) })}
+                      maxLength={5}
                       className="mt-1"
                     />
                   </div>
@@ -207,7 +270,8 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
                       id="cvv"
                       placeholder="123"
                       value={cardInfo.cvv}
-                      onChange={(e) => setCardInfo({ ...cardInfo, cvv: e.target.value })}
+                      onChange={(e) => setCardInfo({ ...cardInfo, cvv: e.target.value.replace(/\D/g, '') })}
+                      maxLength={4}
                       className="mt-1"
                     />
                   </div>
