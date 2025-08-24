@@ -10,7 +10,7 @@ interface ConfirmationStepProps {
 }
 
 export function ConfirmationStep({ data }: ConfirmationStepProps) {
-  const bookingId = `TT${Date.now().toString().slice(-6)}`
+  const bookingId = data.paymentInfo?.bookingId || `TT${Date.now().toString().slice(-6)}`
 
   const handleAddToCalendar = (type: string) => {
     // Calendar integration logic would go here

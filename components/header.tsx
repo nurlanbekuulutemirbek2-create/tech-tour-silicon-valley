@@ -88,6 +88,9 @@ export function Header() {
               <span className="text-sm text-muted-foreground">
                 Welcome, {getFirstName(user)}
               </span>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/profile">My Bookings</Link>
+              </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Sign Out
               </Button>

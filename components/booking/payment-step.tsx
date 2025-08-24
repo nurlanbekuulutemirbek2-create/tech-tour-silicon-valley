@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { useBooking } from "@/hooks/use-booking"
+import { useAuthContext } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 interface PaymentStepProps {
   onNext: () => void
@@ -16,6 +19,10 @@ interface PaymentStepProps {
 }
 
 export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepProps) {
+  const { createBooking } = useBooking()
+  const { user } = useAuthContext()
+  const { toast } = useToast()
+  const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [promoCode, setPromoCode] = useState("")
   const [promoApplied, setPromoApplied] = useState(false)
@@ -37,16 +44,69 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
     }
   }
 
-  const handlePayment = () => {
-    // Simulate payment processing
-    onDataUpdate({
-      paymentInfo: {
-        method: paymentMethod,
-        total: totalPrice,
-        promoCode: promoApplied ? promoCode : null,
-      },
-    })
-    onNext()
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in to complete your booking.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Prepare booking data
+      const bookingData = {
+        userId: user.uid,
+        tourId: data.selectedTour.id,
+        tourName: `${data.selectedTour.company} - ${data.selectedTour.location}`,
+        date: data.selectedSlot.date,
+        time: data.time,
+        guestCount: data.guestInfo.numberOfGuests,
+        guestInfo: {
+          firstName: data.guestInfo.fullName.split(' ')[0] || data.guestInfo.fullName,
+          lastName: data.guestInfo.fullName.split(' ').slice(1).join(' ') || '',
+          email: data.guestInfo.email,
+          phone: data.guestInfo.phone,
+        },
+        totalPrice: totalPrice,
+        status: 'confirmed' as const,
+        paymentStatus: 'paid' as const,
+        paymentMethod: paymentMethod,
+        specialRequests: data.guestInfo.specialRequests || undefined,
+      }
+
+      // Create booking in Firebase
+      const bookingId = await createBooking(bookingData)
+
+      // Update local data with booking info
+      onDataUpdate({
+        paymentInfo: {
+          method: paymentMethod,
+          total: totalPrice,
+          promoCode: promoApplied ? promoCode : null,
+          bookingId: bookingId,
+        },
+      })
+
+      toast({
+        title: "Booking Confirmed!",
+        description: `Your booking has been saved successfully. Booking ID: ${bookingId}`,
+      })
+
+      onNext()
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      toast({
+        title: "Booking Error",
+        description: "Failed to save your booking. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -237,8 +297,12 @@ export function PaymentStep({ onNext, onPrev, onDataUpdate, data }: PaymentStepP
               <Badge variant="outline">💳 PCI Compliant</Badge>
             </div>
 
-            <Button onClick={handlePayment} className="w-full bg-green-600 hover:bg-green-700 text-lg py-3">
-              Complete Booking
+            <Button 
+              onClick={handlePayment} 
+              disabled={isProcessing}
+              className="w-full bg-green-600 hover:bg-green-700 text-lg py-3"
+            >
+              {isProcessing ? "Processing..." : "Complete Booking"}
             </Button>
           </Card>
         </div>
