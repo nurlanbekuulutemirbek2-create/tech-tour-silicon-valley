@@ -16,33 +16,25 @@ import { Calendar, MapPin, Clock, Users, DollarSign, CheckCircle, XCircle, Clock
 
 export default function ProfilePage() {
   const { user } = useAuthContext()
-  const { getUserBookings } = useBooking()
+  const { fetchUserBookings, userBookings, loadingBookings, errorBookings } = useBooking()
   const { toast } = useToast()
-  const [bookings, setBookings] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      if (!user) return
-
-      try {
-        setLoading(true)
-        const userBookings = await getUserBookings(user.uid)
-        setBookings(userBookings)
-      } catch (error) {
-        console.error('Error fetching bookings:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load your booking history.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
+    if (user) {
+      fetchUserBookings()
     }
+  }, [user, fetchUserBookings])
 
-    fetchBookings()
-  }, [user, getUserBookings, toast])
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (errorBookings) {
+      toast({
+        title: "Error",
+        description: "Failed to load your booking history.",
+        variant: "destructive",
+      })
+    }
+  }, [errorBookings, toast])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,17 +93,17 @@ export default function ProfilePage() {
                 <TabsContent value="bookings" className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-gray-900">Booking History</h2>
-                    <Badge variant="outline">{bookings.length} bookings</Badge>
+                    <Badge variant="outline">{userBookings.length} bookings</Badge>
                   </div>
 
-                  {loading ? (
+                  {loadingBookings ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
                         <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                         <p className="text-gray-600">Loading your bookings...</p>
                       </div>
                     </div>
-                  ) : bookings.length === 0 ? (
+                  ) : userBookings.length === 0 ? (
                     <Card className="p-8 text-center">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Calendar className="w-8 h-8 text-gray-400" />
@@ -124,7 +116,7 @@ export default function ProfilePage() {
                     </Card>
                   ) : (
                     <div className="space-y-4">
-                      {bookings.map((booking) => (
+                      {userBookings.map((booking: any) => (
                         <Card key={booking.id} className="p-6">
                           <div className="flex items-start justify-between mb-4">
                             <div>
@@ -219,24 +211,24 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-blue-600">Total Bookings</p>
-                        <p className="font-semibold text-blue-900">{bookings.length}</p>
+                        <p className="font-semibold text-blue-900">{userBookings.length}</p>
                       </div>
                       <div>
                         <p className="text-blue-600">Confirmed Bookings</p>
                         <p className="font-semibold text-blue-900">
-                          {bookings.filter(b => b.status === 'confirmed').length}
+                          {userBookings.filter((b: any) => b.status === 'confirmed').length}
                         </p>
                       </div>
                       <div>
                         <p className="text-blue-600">Completed Tours</p>
                         <p className="font-semibold text-blue-900">
-                          {bookings.filter(b => b.status === 'completed').length}
+                          {userBookings.filter((b: any) => b.status === 'completed').length}
                         </p>
                       </div>
                       <div>
                         <p className="text-blue-600">Total Spent</p>
                         <p className="font-semibold text-blue-900">
-                          ${bookings.reduce((sum, b) => sum + b.totalPrice, 0).toFixed(2)}
+                          ${userBookings.reduce((sum: number, b: any) => sum + b.totalPrice, 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -253,18 +245,18 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Bookings</span>
-                    <span className="font-semibold">{bookings.length}</span>
+                    <span className="font-semibold">{userBookings.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Upcoming Tours</span>
                     <span className="font-semibold text-green-600">
-                      {bookings.filter(b => b.status === 'confirmed' && b.date.toDate() > new Date()).length}
+                      {userBookings.filter((b: any) => b.status === 'confirmed' && b.date.toDate() > new Date()).length}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Completed Tours</span>
                     <span className="font-semibold text-blue-600">
-                      {bookings.filter(b => b.status === 'completed').length}
+                      {userBookings.filter((b: any) => b.status === 'completed').length}
                     </span>
                   </div>
                 </div>
